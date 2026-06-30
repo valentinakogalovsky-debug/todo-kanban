@@ -13,8 +13,11 @@
       margin: 0;
       min-height: 100vh;
       font-family: Arial, sans-serif;
-      color: #1f2933;
-      background: #f4f7fb;
+      color: #f7f0df;
+      background:
+        linear-gradient(rgba(18, 40, 29, 0.72), rgba(18, 40, 29, 0.78)),
+        radial-gradient(circle at 20% 20%, rgba(113, 147, 92, 0.45), transparent 28%),
+        linear-gradient(135deg, #10251a 0%, #27472f 38%, #6f5738 100%);
       display: flex;
       justify-content: center;
       padding: 48px 16px;
@@ -30,6 +33,8 @@
       font-size: 32px;
       font-weight: 700;
       text-align: center;
+      color: #fff7df;
+      text-shadow: 0 2px 8px rgba(16, 37, 26, 0.7);
     }
 
     .form {
@@ -47,13 +52,14 @@
       border: 1px solid #c8d2df;
       border-radius: 6px;
       font-size: 16px;
-      background: #ffffff;
+      color: #233225;
+      background: rgba(255, 250, 235, 0.94);
     }
 
     input:focus,
     select:focus {
-      outline: 2px solid #7aa7ff;
-      border-color: #4b83f1;
+      outline: 2px solid #b5d18a;
+      border-color: #5e8b4a;
     }
 
     select {
@@ -62,10 +68,6 @@
 
     .date-input {
       max-width: 170px;
-    }
-
-    .tags-input {
-      flex: 1 1 260px;
     }
 
     button {
@@ -77,13 +79,13 @@
 
     .add-button {
       padding: 0 18px;
-      color: #ffffff;
-      background: #2563eb;
+      color: #fff7df;
+      background: #4f7b3f;
       font-weight: 700;
     }
 
     .add-button:hover {
-      background: #1d4ed8;
+      background: #3f6532;
     }
 
     .board {
@@ -95,20 +97,22 @@
     .column {
       min-height: 260px;
       padding: 12px;
-      border: 1px solid #d8e0ea;
+      border: 1px solid rgba(207, 190, 143, 0.6);
       border-radius: 6px;
-      background: #eaf0f7;
+      background: rgba(35, 60, 39, 0.78);
+      box-shadow: inset 0 0 0 1px rgba(255, 248, 220, 0.06);
     }
 
     .column.drag-over {
-      border-color: #2563eb;
-      background: #dbeafe;
+      border-color: #d9bf74;
+      background: rgba(68, 94, 49, 0.82);
     }
 
     .column-title {
       margin: 0 0 12px;
       font-size: 18px;
       font-weight: 700;
+      color: #fff7df;
     }
 
     .tasks {
@@ -127,9 +131,13 @@
       flex-wrap: wrap;
       gap: 10px;
       padding: 12px;
-      border: 1px solid #d8e0ea;
+      border: 1px solid #7b5635;
       border-radius: 6px;
-      background: #ffffff;
+      color: #2a1c11;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.08), transparent 18%, rgba(66, 36, 18, 0.08) 50%, transparent 82%),
+        linear-gradient(180deg, #c99a62 0%, #b77d43 100%);
+      box-shadow: 0 7px 18px rgba(16, 37, 26, 0.24);
       cursor: grab;
     }
 
@@ -139,30 +147,45 @@
     }
 
     .task.priority-low {
-      border-left: 6px solid #22c55e;
+      border-left: 6px solid #5e8b4a;
     }
 
     .task.priority-medium {
-      border-left: 6px solid #f59e0b;
+      border-left: 6px solid #d1a13f;
     }
 
     .task.priority-high {
-      border-left: 6px solid #ef4444;
+      border-left: 6px solid #a63d40;
     }
 
     .task.deadline-urgent {
-      background: #fffbeb;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.08), transparent 18%, rgba(66, 36, 18, 0.08) 50%, transparent 82%),
+        linear-gradient(180deg, #d5aa64 0%, #bd8446 100%);
     }
 
     .task.deadline-overdue {
-      background: #fef2f2;
-      border-color: #fecaca;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.08), transparent 18%, rgba(66, 36, 18, 0.08) 50%, transparent 82%),
+        linear-gradient(180deg, #c57b5a 0%, #a85a3d 100%);
+      border-color: #8f352f;
     }
 
     .task-checkbox {
       width: 18px;
       height: 18px;
       flex: 0 0 auto;
+      appearance: none;
+      border: 2px solid #7a1f32;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 30%, #ff8fa3, #b8324a 62%, #7a1f32);
+      cursor: pointer;
+    }
+
+    .task-checkbox:checked {
+      border-color: #315f2e;
+      background: radial-gradient(circle at 35% 30%, #d9f99d, #5e8b4a 62%, #315f2e);
+      box-shadow: inset 0 0 0 3px rgba(255, 247, 223, 0.55);
     }
 
     .task-text {
@@ -182,8 +205,8 @@
       margin-top: 6px;
       padding: 3px 7px;
       border-radius: 6px;
-      background: #eef2f7;
-      color: #52606d;
+      background: rgba(255, 247, 223, 0.72);
+      color: #4b3621;
       font-size: 12px;
       font-weight: 700;
     }
@@ -218,8 +241,8 @@
     }
 
     .task-tag {
-      background: #e0f2fe;
-      color: #075985;
+      background: #5e8b4a;
+      color: #fff7df;
     }
 
     .task.done .task-text {
@@ -229,32 +252,32 @@
 
     .delete-button {
       padding: 8px 10px;
-      color: #ffffff;
-      background: #dc2626;
+      color: #fff7df;
+      background: #8f352f;
     }
 
     .delete-button:hover {
-      background: #b91c1c;
+      background: #73302b;
     }
 
     .edit-button,
     .restore-button {
       padding: 8px 10px;
-      color: #ffffff;
-      background: #52606d;
+      color: #fff7df;
+      background: #5a4632;
     }
 
     .edit-button:hover,
     .restore-button:hover {
-      background: #3e4c59;
+      background: #453626;
     }
 
     .trash {
       margin-top: 20px;
       padding: 12px;
-      border: 1px solid #d8e0ea;
+      border: 1px solid rgba(207, 190, 143, 0.6);
       border-radius: 6px;
-      background: #ffffff;
+      background: rgba(35, 60, 39, 0.82);
     }
 
     .trash .task {
@@ -272,21 +295,22 @@
     .trash-title {
       margin: 0;
       font-size: 18px;
+      color: #fff7df;
     }
 
     .trash-empty {
       margin: 0;
-      color: #7b8794;
+      color: #d8cda5;
     }
 
     .clear-button {
       padding: 8px 10px;
-      color: #ffffff;
-      background: #92400e;
+      color: #fff7df;
+      background: #7b5635;
     }
 
     .clear-button:hover {
-      background: #78350f;
+      background: #604329;
     }
 
     .modal {
@@ -308,7 +332,8 @@
       max-width: 420px;
       padding: 18px;
       border-radius: 6px;
-      background: #ffffff;
+      color: #2a1c11;
+      background: #fff4d6;
     }
 
     .modal-header {
@@ -327,8 +352,8 @@
     .close-button {
       width: 34px;
       height: 34px;
-      color: #1f2933;
-      background: #eef2f7;
+      color: #2a1c11;
+      background: #e8d8ad;
     }
 
     .modal-field {
@@ -337,6 +362,104 @@
       gap: 6px;
       margin-bottom: 12px;
       font-weight: 700;
+    }
+
+    .tag-editor {
+      flex: 1 1 100%;
+      padding: 10px;
+      border: 1px solid rgba(207, 190, 143, 0.6);
+      border-radius: 6px;
+      background: rgba(255, 247, 223, 0.14);
+    }
+
+    .tag-editor-title {
+      display: block;
+      margin-bottom: 8px;
+      color: #fff7df;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .modal-field .tag-editor-title,
+    .modal-panel .tag-editor-title {
+      color: #2a1c11;
+    }
+
+    .tag-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .tag-input-row input {
+      max-width: none;
+    }
+
+    .tag-add-button {
+      padding: 0 12px;
+      color: #fff7df;
+      background: #4f7b3f;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .tag-palette,
+    .tag-row-palette {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .tag-color-button {
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba(255, 247, 223, 0.8);
+      border-radius: 50%;
+      box-shadow: 0 1px 4px rgba(16, 37, 26, 0.25);
+    }
+
+    .tag-color-button.selected {
+      outline: 2px solid #fff7df;
+      outline-offset: 2px;
+    }
+
+    .modal-panel .tag-color-button.selected {
+      outline-color: #2a1c11;
+    }
+
+    .tag-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .tag-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 1fr) auto;
+      gap: 8px;
+      padding: 8px;
+      border-radius: 6px;
+      background: rgba(255, 247, 223, 0.18);
+    }
+
+    .modal-panel .tag-row {
+      background: rgba(95, 71, 45, 0.12);
+    }
+
+    .tag-name-input {
+      max-width: none;
+    }
+
+    .tag-remove-button {
+      padding: 0 10px;
+      color: #fff7df;
+      background: #8f352f;
+    }
+
+    .tag-row-palette {
+      grid-column: 1 / -1;
+      margin-bottom: 0;
     }
 
     .modal-field input,
@@ -354,15 +477,15 @@
 
     .save-button {
       padding: 10px 14px;
-      color: #ffffff;
-      background: #2563eb;
+      color: #fff7df;
+      background: #4f7b3f;
       font-weight: 700;
     }
 
     .cancel-button {
       padding: 10px 14px;
-      color: #1f2933;
-      background: #eef2f7;
+      color: #2a1c11;
+      background: #e8d8ad;
     }
 
     @media (max-width: 480px) {
@@ -379,8 +502,14 @@
       }
 
       .date-input,
-      .tags-input {
+      .tag-editor {
         max-width: none;
+      }
+
+      .tag-input-row,
+      .tag-row {
+        grid-template-columns: 1fr;
+        flex-direction: column;
       }
 
       .board {
@@ -402,7 +531,15 @@
         <option value="high">Высокий</option>
       </select>
       <input class="date-input" id="taskDeadline" type="date" aria-label="Дедлайн задачи">
-      <input class="tags-input" id="taskTags" type="text" placeholder="Теги через запятую" autocomplete="off">
+      <div class="tag-editor" aria-label="Теги задачи">
+        <span class="tag-editor-title">Теги</span>
+        <div class="tag-input-row">
+          <input id="newTagInput" type="text" placeholder="Название тега" autocomplete="off">
+          <button class="tag-add-button" id="addNewTagButton" type="button">Добавить тег</button>
+        </div>
+        <div class="tag-palette" id="newTagPalette" aria-label="Цвет нового тега"></div>
+        <div class="tag-list" id="newTagList"></div>
+      </div>
       <button class="add-button" type="submit">Добавить</button>
     </form>
 
@@ -462,7 +599,14 @@
 
         <label class="modal-field">
           Теги
-          <input id="editTagsInput" type="text" placeholder="учёба, дизайн, срочно" autocomplete="off">
+          <div class="tag-editor" aria-label="Редактирование тегов">
+            <div class="tag-input-row">
+              <input id="editTagInput" type="text" placeholder="Название тега" autocomplete="off">
+              <button class="tag-add-button" id="addEditTagButton" type="button">Добавить тег</button>
+            </div>
+            <div class="tag-palette" id="editTagPalette" aria-label="Цвет нового тега"></div>
+            <div class="tag-list" id="editTagList"></div>
+          </div>
         </label>
 
         <div class="modal-actions">
@@ -480,11 +624,26 @@
       medium: "Средний",
       high: "Высокий"
     };
+    const tagColors = [
+      { id: "green", label: "Зелёный", value: "#5E8B4A" },
+      { id: "olive", label: "Оливковый", value: "#7A8F45" },
+      { id: "brown", label: "Коричневый", value: "#8B5A2B" },
+      { id: "sand", label: "Песочный", value: "#C2A15A" },
+      { id: "dark-green", label: "Тёмно-зелёный", value: "#2F5D3A" },
+      { id: "berry-red", label: "Ягодный красный", value: "#A63D40" },
+      { id: "cranberry", label: "Клюквенный", value: "#8E2F4F" },
+      { id: "mustard", label: "Горчичный", value: "#B88A2D" },
+      { id: "sage", label: "Серо-зелёный", value: "#6F8A78" },
+      { id: "wood-orange", label: "Древесно-оранжевый", value: "#B66A32" }
+    ];
     const taskForm = document.querySelector("#taskForm");
     const taskInput = document.querySelector("#taskInput");
     const taskPriority = document.querySelector("#taskPriority");
     const taskDeadline = document.querySelector("#taskDeadline");
-    const taskTags = document.querySelector("#taskTags");
+    const newTagInput = document.querySelector("#newTagInput");
+    const addNewTagButton = document.querySelector("#addNewTagButton");
+    const newTagPalette = document.querySelector("#newTagPalette");
+    const newTagList = document.querySelector("#newTagList");
     const columns = document.querySelectorAll(".column");
     const trashTasks = document.querySelector("#trashTasks");
     const trashEmpty = document.querySelector("#trashEmpty");
@@ -494,12 +653,19 @@
     const editTitleInput = document.querySelector("#editTitleInput");
     const editPrioritySelect = document.querySelector("#editPrioritySelect");
     const editDeadlineInput = document.querySelector("#editDeadlineInput");
-    const editTagsInput = document.querySelector("#editTagsInput");
+    const editTagInput = document.querySelector("#editTagInput");
+    const addEditTagButton = document.querySelector("#addEditTagButton");
+    const editTagPalette = document.querySelector("#editTagPalette");
+    const editTagList = document.querySelector("#editTagList");
     const closeModalButton = document.querySelector("#closeModalButton");
     const cancelEditButton = document.querySelector("#cancelEditButton");
     let tasks = normalizeTasks(loadTasks());
     let draggedTask = null;
     let editingTaskId = null;
+    let newTaskTags = [];
+    let editTaskTags = [];
+    let selectedNewTagColor = tagColors[0].id;
+    let selectedEditTagColor = tagColors[0].id;
 
     function loadTasks() {
       const savedTasks = localStorage.getItem(storageKey);
@@ -520,6 +686,20 @@
       localStorage.setItem(storageKey, JSON.stringify(tasks));
     }
 
+    function normalizeTag(tag) {
+      if (typeof tag === "string") {
+        return {
+          name: tag,
+          color: tagColors[0].id
+        };
+      }
+
+      return {
+        name: tag.name || "",
+        color: tagColors.some((color) => color.id === tag.color) ? tag.color : tagColors[0].id
+      };
+    }
+
     function normalizeTasks(taskList) {
       return taskList.map((task, index) => ({
         id: task.id || `${Date.now()}-${index}`,
@@ -529,7 +709,7 @@
         deleted: Boolean(task.deleted),
         previousStatus: task.previousStatus || null,
         deadline: task.deadline || "",
-        tags: Array.isArray(task.tags) ? task.tags : [],
+        tags: Array.isArray(task.tags) ? task.tags.map(normalizeTag).filter((tag) => tag.name) : [],
         order: Number.isFinite(task.order) ? task.order : index
       }));
     }
@@ -538,11 +718,99 @@
       return tasks.find((task) => task.id === id);
     }
 
-    function parseTags(value) {
-      return value
-        .split(",")
-        .map((tag) => tag.trim())
-        .filter(Boolean);
+    function cloneTags(tags) {
+      return tags.map((tag) => ({ ...tag }));
+    }
+
+    function getTagColor(colorId) {
+      return tagColors.find((color) => color.id === colorId) || tagColors[0];
+    }
+
+    function getReadableTextColor(hex) {
+      const red = parseInt(hex.slice(1, 3), 16);
+      const green = parseInt(hex.slice(3, 5), 16);
+      const blue = parseInt(hex.slice(5, 7), 16);
+      const brightness = (red * 299 + green * 587 + blue * 114) / 1000;
+
+      return brightness > 145 ? "#2a1c11" : "#fff7df";
+    }
+
+    function applyTagColor(element, colorId) {
+      const color = getTagColor(colorId);
+      element.style.background = color.value;
+      element.style.color = getReadableTextColor(color.value);
+    }
+
+    function renderPalette(container, selectedColor, onSelect) {
+      container.innerHTML = "";
+
+      tagColors.forEach((color) => {
+        const button = document.createElement("button");
+        button.className = "tag-color-button";
+        button.type = "button";
+        button.title = color.label;
+        button.setAttribute("aria-label", color.label);
+        button.style.background = color.value;
+        button.classList.toggle("selected", color.id === selectedColor);
+
+        button.addEventListener("click", () => {
+          onSelect(color.id);
+        });
+
+        container.append(button);
+      });
+    }
+
+    function renderTagList(container, tags, onChange) {
+      container.innerHTML = "";
+
+      tags.forEach((tag, index) => {
+        const row = document.createElement("div");
+        row.className = "tag-row";
+
+        const input = document.createElement("input");
+        input.className = "tag-name-input";
+        input.type = "text";
+        input.value = tag.name;
+        input.setAttribute("aria-label", "Название тега");
+
+        const removeButton = document.createElement("button");
+        removeButton.className = "tag-remove-button";
+        removeButton.type = "button";
+        removeButton.textContent = "Удалить";
+
+        const palette = document.createElement("div");
+        palette.className = "tag-row-palette";
+
+        input.addEventListener("input", () => {
+          tags[index].name = input.value.trim();
+        });
+
+        removeButton.addEventListener("click", () => {
+          tags.splice(index, 1);
+          onChange();
+        });
+
+        renderPalette(palette, tag.color, (colorId) => {
+          tags[index].color = colorId;
+          onChange();
+        });
+
+        row.append(input, removeButton, palette);
+        container.append(row);
+      });
+    }
+
+    function addTag(tags, input, colorId, onChange) {
+      const name = input.value.trim();
+
+      if (!name) {
+        return;
+      }
+
+      tags.push({ name, color: colorId });
+      input.value = "";
+      onChange();
     }
 
     function getNextOrder(status) {
@@ -560,7 +828,7 @@
         status: "todo",
         priority,
         deadline,
-        tags,
+        tags: cloneTags(tags),
         order: getNextOrder("todo"),
         deleted: false,
         previousStatus: null
@@ -664,7 +932,8 @@
       editTitleInput.value = task.title;
       editPrioritySelect.value = task.priority;
       editDeadlineInput.value = task.deadline;
-      editTagsInput.value = task.tags.join(", ");
+      editTaskTags = cloneTags(task.tags);
+      renderEditTagControls();
       editModal.classList.add("open");
       editModal.setAttribute("aria-hidden", "false");
       editTitleInput.focus();
@@ -672,6 +941,7 @@
 
     function closeEditModal() {
       editingTaskId = null;
+      editTaskTags = [];
       editForm.reset();
       editModal.classList.remove("open");
       editModal.setAttribute("aria-hidden", "true");
@@ -724,7 +994,8 @@
       task.tags.forEach((tag) => {
         const tagBadge = document.createElement("span");
         tagBadge.className = "task-tag";
-        tagBadge.textContent = tag;
+        tagBadge.textContent = tag.name;
+        applyTagColor(tagBadge, tag.color);
         meta.append(tagBadge);
       });
 
@@ -812,7 +1083,8 @@
       task.tags.forEach((tag) => {
         const tagBadge = document.createElement("span");
         tagBadge.className = "task-tag";
-        tagBadge.textContent = tag;
+        tagBadge.textContent = tag.name;
+        applyTagColor(tagBadge, tag.color);
         meta.append(tagBadge);
       });
 
@@ -871,6 +1143,24 @@
 
       trashEmpty.hidden = tasks.some((task) => task.deleted);
       clearTrashButton.disabled = !tasks.some((task) => task.deleted);
+    }
+
+    function renderNewTagControls() {
+      renderPalette(newTagPalette, selectedNewTagColor, (colorId) => {
+        selectedNewTagColor = colorId;
+        renderNewTagControls();
+      });
+
+      renderTagList(newTagList, newTaskTags, renderNewTagControls);
+    }
+
+    function renderEditTagControls() {
+      renderPalette(editTagPalette, selectedEditTagColor, (colorId) => {
+        selectedEditTagColor = colorId;
+        renderEditTagControls();
+      });
+
+      renderTagList(editTagList, editTaskTags, renderEditTagControls);
     }
 
     function getDragAfterElement(list, y) {
@@ -959,13 +1249,15 @@
         return;
       }
 
-      tasks.push(createTaskData(text, taskPriority.value, taskDeadline.value, parseTags(taskTags.value)));
+      tasks.push(createTaskData(text, taskPriority.value, taskDeadline.value, newTaskTags));
       saveTasks();
       renderTasks();
       taskInput.value = "";
       taskPriority.value = "medium";
       taskDeadline.value = "";
-      taskTags.value = "";
+      newTaskTags = [];
+      selectedNewTagColor = tagColors[0].id;
+      renderNewTagControls();
       taskInput.focus();
     });
 
@@ -982,7 +1274,7 @@
       task.title = title;
       task.priority = editPrioritySelect.value;
       task.deadline = editDeadlineInput.value;
-      task.tags = parseTags(editTagsInput.value);
+      task.tags = cloneTags(editTaskTags).filter((tag) => tag.name);
       saveTasks();
       renderTasks();
       closeEditModal();
@@ -1003,6 +1295,34 @@
       renderTasks();
     });
 
+    addNewTagButton.addEventListener("click", () => {
+      addTag(newTaskTags, newTagInput, selectedNewTagColor, renderNewTagControls);
+    });
+
+    newTagInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") {
+        return;
+      }
+
+      event.preventDefault();
+      addTag(newTaskTags, newTagInput, selectedNewTagColor, renderNewTagControls);
+    });
+
+    addEditTagButton.addEventListener("click", () => {
+      addTag(editTaskTags, editTagInput, selectedEditTagColor, renderEditTagControls);
+    });
+
+    editTagInput.addEventListener("keydown", (event) => {
+      if (event.key !== "Enter") {
+        return;
+      }
+
+      event.preventDefault();
+      addTag(editTaskTags, editTagInput, selectedEditTagColor, renderEditTagControls);
+    });
+
+    renderNewTagControls();
+    renderEditTagControls();
     renderTasks();
   </script>
 </body>
