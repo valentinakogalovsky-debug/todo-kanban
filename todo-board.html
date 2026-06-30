@@ -34,6 +34,7 @@
 
     .form {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 20px;
     }
@@ -57,6 +58,14 @@
 
     select {
       max-width: 160px;
+    }
+
+    .date-input {
+      max-width: 170px;
+    }
+
+    .tags-input {
+      flex: 1 1 260px;
     }
 
     button {
@@ -141,6 +150,15 @@
       border-left: 6px solid #ef4444;
     }
 
+    .task.deadline-urgent {
+      background: #fffbeb;
+    }
+
+    .task.deadline-overdue {
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+
     .task-checkbox {
       width: 18px;
       height: 18px;
@@ -168,6 +186,40 @@
       color: #52606d;
       font-size: 12px;
       font-weight: 700;
+    }
+
+    .task-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .task-deadline,
+    .task-tag,
+    .task-deadline-label {
+      display: inline-block;
+      padding: 3px 7px;
+      border-radius: 6px;
+      background: #eef2f7;
+      color: #52606d;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .task-deadline-label.urgent {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .task-deadline-label.overdue {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .task-tag {
+      background: #e0f2fe;
+      color: #075985;
     }
 
     .task.done .task-text {
@@ -203,6 +255,10 @@
       border: 1px solid #d8e0ea;
       border-radius: 6px;
       background: #ffffff;
+    }
+
+    .trash .task {
+      cursor: default;
     }
 
     .trash-header {
@@ -322,6 +378,11 @@
         max-width: none;
       }
 
+      .date-input,
+      .tags-input {
+        max-width: none;
+      }
+
       .board {
         grid-template-columns: 1fr;
       }
@@ -340,6 +401,8 @@
         <option value="medium" selected>Средний</option>
         <option value="high">Высокий</option>
       </select>
+      <input class="date-input" id="taskDeadline" type="date" aria-label="Дедлайн задачи">
+      <input class="tags-input" id="taskTags" type="text" placeholder="Теги через запятую" autocomplete="off">
       <button class="add-button" type="submit">Добавить</button>
     </form>
 
@@ -392,6 +455,16 @@
           </select>
         </label>
 
+        <label class="modal-field">
+          Дедлайн
+          <input id="editDeadlineInput" type="date">
+        </label>
+
+        <label class="modal-field">
+          Теги
+          <input id="editTagsInput" type="text" placeholder="учёба, дизайн, срочно" autocomplete="off">
+        </label>
+
         <div class="modal-actions">
           <button class="cancel-button" id="cancelEditButton" type="button">Отмена</button>
           <button class="save-button" type="submit">Сохранить</button>
@@ -410,6 +483,8 @@
     const taskForm = document.querySelector("#taskForm");
     const taskInput = document.querySelector("#taskInput");
     const taskPriority = document.querySelector("#taskPriority");
+    const taskDeadline = document.querySelector("#taskDeadline");
+    const taskTags = document.querySelector("#taskTags");
     const columns = document.querySelectorAll(".column");
     const trashTasks = document.querySelector("#trashTasks");
     const trashEmpty = document.querySelector("#trashEmpty");
@@ -418,9 +493,11 @@
     const editForm = document.querySelector("#editForm");
     const editTitleInput = document.querySelector("#editTitleInput");
     const editPrioritySelect = document.querySelector("#editPrioritySelect");
+    const editDeadlineInput = document.querySelector("#editDeadlineInput");
+    const editTagsInput = document.querySelector("#editTagsInput");
     const closeModalButton = document.querySelector("#closeModalButton");
     const cancelEditButton = document.querySelector("#cancelEditButton");
-    let tasks = loadTasks();
+    let tasks = normalizeTasks(loadTasks());
     let draggedTask = null;
     let editingTaskId = null;
 
@@ -443,16 +520,48 @@
       localStorage.setItem(storageKey, JSON.stringify(tasks));
     }
 
+    function normalizeTasks(taskList) {
+      return taskList.map((task, index) => ({
+        id: task.id || `${Date.now()}-${index}`,
+        title: task.title || "",
+        status: task.status || "todo",
+        priority: task.priority || "medium",
+        deleted: Boolean(task.deleted),
+        previousStatus: task.previousStatus || null,
+        deadline: task.deadline || "",
+        tags: Array.isArray(task.tags) ? task.tags : [],
+        order: Number.isFinite(task.order) ? task.order : index
+      }));
+    }
+
     function getTaskById(id) {
       return tasks.find((task) => task.id === id);
     }
 
-    function createTaskData(title, priority) {
+    function parseTags(value) {
+      return value
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean);
+    }
+
+    function getNextOrder(status) {
+      const orders = tasks
+        .filter((task) => !task.deleted && task.status === status)
+        .map((task) => task.order);
+
+      return orders.length ? Math.max(...orders) + 1 : 0;
+    }
+
+    function createTaskData(title, priority, deadline, tags) {
       return {
         id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
         title,
         status: "todo",
         priority,
+        deadline,
+        tags,
+        order: getNextOrder("todo"),
         deleted: false,
         previousStatus: null
       };
@@ -462,8 +571,42 @@
       task.status = status;
       task.deleted = false;
       task.previousStatus = null;
+      task.order = getNextOrder(status);
       saveTasks();
       renderTasks();
+    }
+
+    function formatDeadline(value) {
+      if (!value) {
+        return "";
+      }
+
+      const [year, month, day] = value.split("-");
+      return `${day}.${month}.${year}`;
+    }
+
+    function getDeadlineState(task) {
+      if (!task.deadline || task.status === "done") {
+        return "";
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+
+      const deadline = new Date(`${task.deadline}T00:00:00`);
+
+      if (deadline < today) {
+        return "overdue";
+      }
+
+      if (deadline <= tomorrow) {
+        return "urgent";
+      }
+
+      return "";
     }
 
     function moveTaskToStatus(taskId, status) {
@@ -499,6 +642,7 @@
       task.status = task.previousStatus || "todo";
       task.previousStatus = null;
       task.deleted = false;
+      task.order = getNextOrder(task.status);
       saveTasks();
       renderTasks();
     }
@@ -519,6 +663,8 @@
       editingTaskId = taskId;
       editTitleInput.value = task.title;
       editPrioritySelect.value = task.priority;
+      editDeadlineInput.value = task.deadline;
+      editTagsInput.value = task.tags.join(", ");
       editModal.classList.add("open");
       editModal.setAttribute("aria-hidden", "false");
       editTitleInput.focus();
@@ -533,11 +679,14 @@
 
     function createTaskElement(task) {
       const item = document.createElement("li");
+      const deadlineState = getDeadlineState(task);
       item.className = `task priority-${task.priority}`;
       item.dataset.id = task.id;
       item.dataset.status = task.status;
       item.draggable = true;
       item.classList.toggle("done", task.status === "done");
+      item.classList.toggle("deadline-urgent", deadlineState === "urgent");
+      item.classList.toggle("deadline-overdue", deadlineState === "overdue");
 
       const checkbox = document.createElement("input");
       checkbox.className = "task-checkbox";
@@ -554,6 +703,30 @@
       const priority = document.createElement("span");
       priority.className = "task-priority";
       priority.textContent = priorityLabels[task.priority];
+
+      const meta = document.createElement("div");
+      meta.className = "task-meta";
+
+      if (task.deadline) {
+        const deadline = document.createElement("span");
+        deadline.className = "task-deadline";
+        deadline.textContent = `Дедлайн: ${formatDeadline(task.deadline)}`;
+        meta.append(deadline);
+      }
+
+      if (deadlineState) {
+        const deadlineLabel = document.createElement("span");
+        deadlineLabel.className = `task-deadline-label ${deadlineState}`;
+        deadlineLabel.textContent = deadlineState === "overdue" ? "Просрочено" : "Срочно";
+        meta.append(deadlineLabel);
+      }
+
+      task.tags.forEach((tag) => {
+        const tagBadge = document.createElement("span");
+        tagBadge.className = "task-tag";
+        tagBadge.textContent = tag;
+        meta.append(tagBadge);
+      });
 
       const editButton = document.createElement("button");
       editButton.className = "edit-button";
@@ -602,6 +775,11 @@
       });
 
       taskContent.append(taskText, priority);
+
+      if (meta.children.length) {
+        taskContent.append(meta);
+      }
+
       item.append(checkbox, taskContent, editButton, deleteButton);
       return item;
     }
@@ -620,6 +798,23 @@
       const priority = document.createElement("span");
       priority.className = "task-priority";
       priority.textContent = priorityLabels[task.priority];
+
+      const meta = document.createElement("div");
+      meta.className = "task-meta";
+
+      if (task.deadline) {
+        const deadline = document.createElement("span");
+        deadline.className = "task-deadline";
+        deadline.textContent = `Дедлайн: ${formatDeadline(task.deadline)}`;
+        meta.append(deadline);
+      }
+
+      task.tags.forEach((tag) => {
+        const tagBadge = document.createElement("span");
+        tagBadge.className = "task-tag";
+        tagBadge.textContent = tag;
+        meta.append(tagBadge);
+      });
 
       const restoreButton = document.createElement("button");
       restoreButton.className = "restore-button";
@@ -640,8 +835,19 @@
       });
 
       taskContent.append(taskText, priority);
+
+      if (meta.children.length) {
+        taskContent.append(meta);
+      }
+
       item.append(taskContent, restoreButton, deleteButton);
       return item;
+    }
+
+    function getVisibleTasksByStatus(status) {
+      return tasks
+        .filter((task) => !task.deleted && task.status === status)
+        .sort((firstTask, secondTask) => firstTask.order - secondTask.order);
     }
 
     function renderTasks() {
@@ -650,29 +856,84 @@
       });
       trashTasks.innerHTML = "";
 
-      tasks.forEach((task) => {
-        if (task.deleted) {
-          trashTasks.append(createTrashTaskElement(task));
-          return;
-        }
+      document.querySelectorAll(".column").forEach((column) => {
+        const status = column.dataset.status;
+        const list = column.querySelector(".tasks");
 
-        const targetColumn = document.querySelector(`[data-status="${task.status}"]`);
+        getVisibleTasksByStatus(status).forEach((task) => {
+          list.append(createTaskElement(task));
+        });
+      });
 
-        if (!targetColumn) {
-          return;
-        }
-
-        targetColumn.querySelector(".tasks").append(createTaskElement(task));
+      tasks.filter((task) => task.deleted).forEach((task) => {
+        trashTasks.append(createTrashTaskElement(task));
       });
 
       trashEmpty.hidden = tasks.some((task) => task.deleted);
       clearTrashButton.disabled = !tasks.some((task) => task.deleted);
     }
 
+    function getDragAfterElement(list, y) {
+      const draggableElements = [...list.querySelectorAll(".task:not(.dragging)")];
+
+      return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+
+        if (offset < 0 && offset > closest.offset) {
+          return { offset, element: child };
+        }
+
+        return closest;
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function syncBoardOrderFromDom() {
+      columns.forEach((column) => {
+        const status = column.dataset.status;
+        const taskElements = column.querySelectorAll(".task");
+
+        taskElements.forEach((item, index) => {
+          const task = getTaskById(item.dataset.id);
+
+          if (!task) {
+            return;
+          }
+
+          task.status = status;
+          task.deleted = false;
+          task.previousStatus = null;
+          task.order = index;
+        });
+      });
+
+      saveTasks();
+      renderTasks();
+    }
+
     columns.forEach((column) => {
       column.addEventListener("dragover", (event) => {
         event.preventDefault();
         column.classList.add("drag-over");
+
+        if (!draggedTask) {
+          return;
+        }
+
+        const list = column.querySelector(".tasks");
+        const draggedElement = document.querySelector(`[data-id="${draggedTask}"]`);
+        const afterElement = getDragAfterElement(list, event.clientY);
+
+        if (!draggedElement) {
+          return;
+        }
+
+        if (!afterElement) {
+          list.append(draggedElement);
+          return;
+        }
+
+        list.insertBefore(draggedElement, afterElement);
       });
 
       column.addEventListener("dragleave", () => {
@@ -686,7 +947,7 @@
           return;
         }
 
-        moveTaskToStatus(draggedTask, column.dataset.status);
+        syncBoardOrderFromDom();
       });
     });
 
@@ -698,11 +959,13 @@
         return;
       }
 
-      tasks.push(createTaskData(text, taskPriority.value));
+      tasks.push(createTaskData(text, taskPriority.value, taskDeadline.value, parseTags(taskTags.value)));
       saveTasks();
       renderTasks();
       taskInput.value = "";
       taskPriority.value = "medium";
+      taskDeadline.value = "";
+      taskTags.value = "";
       taskInput.focus();
     });
 
@@ -718,6 +981,8 @@
 
       task.title = title;
       task.priority = editPrioritySelect.value;
+      task.deadline = editDeadlineInput.value;
+      task.tags = parseTags(editTagsInput.value);
       saveTasks();
       renderTasks();
       closeEditModal();
