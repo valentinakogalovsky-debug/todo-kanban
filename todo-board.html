@@ -38,7 +38,8 @@
       margin-bottom: 20px;
     }
 
-    input {
+    input,
+    select {
       flex: 1;
       min-width: 0;
       padding: 12px 14px;
@@ -48,9 +49,14 @@
       background: #ffffff;
     }
 
-    input:focus {
+    input:focus,
+    select:focus {
       outline: 2px solid #7aa7ff;
       border-color: #4b83f1;
+    }
+
+    select {
+      max-width: 160px;
     }
 
     button {
@@ -108,7 +114,8 @@
 
     .task {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
+      flex-wrap: wrap;
       gap: 10px;
       padding: 12px;
       border: 1px solid #d8e0ea;
@@ -122,6 +129,18 @@
       cursor: grabbing;
     }
 
+    .task.priority-low {
+      border-left: 6px solid #22c55e;
+    }
+
+    .task.priority-medium {
+      border-left: 6px solid #f59e0b;
+    }
+
+    .task.priority-high {
+      border-left: 6px solid #ef4444;
+    }
+
     .task-checkbox {
       width: 18px;
       height: 18px;
@@ -130,8 +149,25 @@
 
     .task-text {
       flex: 1;
-      overflow-wrap: anywhere;
+      overflow-wrap: break-word;
+      word-break: normal;
       line-height: 1.4;
+    }
+
+    .task-content {
+      flex: 1 1 180px;
+      min-width: 0;
+    }
+
+    .task-priority {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 3px 7px;
+      border-radius: 6px;
+      background: #eef2f7;
+      color: #52606d;
+      font-size: 12px;
+      font-weight: 700;
     }
 
     .task.done .task-text {
@@ -149,6 +185,130 @@
       background: #b91c1c;
     }
 
+    .edit-button,
+    .restore-button {
+      padding: 8px 10px;
+      color: #ffffff;
+      background: #52606d;
+    }
+
+    .edit-button:hover,
+    .restore-button:hover {
+      background: #3e4c59;
+    }
+
+    .trash {
+      margin-top: 20px;
+      padding: 12px;
+      border: 1px solid #d8e0ea;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .trash-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .trash-title {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .trash-empty {
+      margin: 0;
+      color: #7b8794;
+    }
+
+    .clear-button {
+      padding: 8px 10px;
+      color: #ffffff;
+      background: #92400e;
+    }
+
+    .clear-button:hover {
+      background: #78350f;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: rgba(31, 41, 51, 0.45);
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-panel {
+      width: 100%;
+      max-width: 420px;
+      padding: 18px;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .modal-title {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .close-button {
+      width: 34px;
+      height: 34px;
+      color: #1f2933;
+      background: #eef2f7;
+    }
+
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .modal-field input,
+    .modal-field select {
+      max-width: none;
+      font-weight: 400;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .save-button {
+      padding: 10px 14px;
+      color: #ffffff;
+      background: #2563eb;
+      font-weight: 700;
+    }
+
+    .cancel-button {
+      padding: 10px 14px;
+      color: #1f2933;
+      background: #eef2f7;
+    }
+
     @media (max-width: 480px) {
       .form {
         flex-direction: column;
@@ -158,9 +318,14 @@
         min-height: 44px;
       }
 
+      select {
+        max-width: none;
+      }
+
       .board {
         grid-template-columns: 1fr;
       }
+
     }
   </style>
 </head>
@@ -170,6 +335,11 @@
 
     <form class="form" id="taskForm">
       <input id="taskInput" type="text" placeholder="Новая задача" autocomplete="off">
+      <select id="taskPriority" aria-label="Приоритет задачи">
+        <option value="low">Низкий</option>
+        <option value="medium" selected>Средний</option>
+        <option value="high">Высокий</option>
+      </select>
       <button class="add-button" type="submit">Добавить</button>
     </form>
 
@@ -189,42 +359,206 @@
         <ul class="tasks" id="doneTasks"></ul>
       </div>
     </section>
+
+    <section class="trash" aria-label="Корзина">
+      <div class="trash-header">
+        <h2 class="trash-title">Корзина</h2>
+        <button class="clear-button" id="clearTrashButton" type="button">Очистить корзину</button>
+      </div>
+      <p class="trash-empty" id="trashEmpty">Корзина пуста</p>
+      <ul class="tasks" id="trashTasks"></ul>
+    </section>
   </main>
 
+  <div class="modal" id="editModal" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="editModalTitle">
+      <div class="modal-header">
+        <h2 class="modal-title" id="editModalTitle">Редактировать задачу</h2>
+        <button class="close-button" id="closeModalButton" type="button" aria-label="Закрыть">×</button>
+      </div>
+
+      <form id="editForm">
+        <label class="modal-field">
+          Текст задачи
+          <input id="editTitleInput" type="text" autocomplete="off">
+        </label>
+
+        <label class="modal-field">
+          Приоритет
+          <select id="editPrioritySelect">
+            <option value="low">Низкий</option>
+            <option value="medium">Средний</option>
+            <option value="high">Высокий</option>
+          </select>
+        </label>
+
+        <div class="modal-actions">
+          <button class="cancel-button" id="cancelEditButton" type="button">Отмена</button>
+          <button class="save-button" type="submit">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
+    const storageKey = "todo-kanban-tasks";
+    const priorityLabels = {
+      low: "Низкий",
+      medium: "Средний",
+      high: "Высокий"
+    };
     const taskForm = document.querySelector("#taskForm");
     const taskInput = document.querySelector("#taskInput");
-    const todoTasks = document.querySelector("#todoTasks");
+    const taskPriority = document.querySelector("#taskPriority");
     const columns = document.querySelectorAll(".column");
+    const trashTasks = document.querySelector("#trashTasks");
+    const trashEmpty = document.querySelector("#trashEmpty");
+    const clearTrashButton = document.querySelector("#clearTrashButton");
+    const editModal = document.querySelector("#editModal");
+    const editForm = document.querySelector("#editForm");
+    const editTitleInput = document.querySelector("#editTitleInput");
+    const editPrioritySelect = document.querySelector("#editPrioritySelect");
+    const closeModalButton = document.querySelector("#closeModalButton");
+    const cancelEditButton = document.querySelector("#cancelEditButton");
+    let tasks = loadTasks();
     let draggedTask = null;
+    let editingTaskId = null;
 
-    function updateTaskStatus(item, status) {
-      item.dataset.status = status;
-      item.classList.toggle("done", status === "done");
-      item.querySelector(".task-checkbox").checked = status === "done";
+    function loadTasks() {
+      const savedTasks = localStorage.getItem(storageKey);
+
+      if (!savedTasks) {
+        return [];
+      }
+
+      try {
+        const parsedTasks = JSON.parse(savedTasks);
+        return Array.isArray(parsedTasks) ? parsedTasks : [];
+      } catch {
+        return [];
+      }
     }
 
-    function moveTaskToStatus(item, status) {
-      const targetColumn = document.querySelector(`[data-status="${status}"]`);
-      const targetList = targetColumn.querySelector(".tasks");
-
-      targetList.append(item);
-      updateTaskStatus(item, status);
+    function saveTasks() {
+      localStorage.setItem(storageKey, JSON.stringify(tasks));
     }
 
-    function createTask(text) {
+    function getTaskById(id) {
+      return tasks.find((task) => task.id === id);
+    }
+
+    function createTaskData(title, priority) {
+      return {
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        title,
+        status: "todo",
+        priority,
+        deleted: false,
+        previousStatus: null
+      };
+    }
+
+    function updateTaskStatus(task, status) {
+      task.status = status;
+      task.deleted = false;
+      task.previousStatus = null;
+      saveTasks();
+      renderTasks();
+    }
+
+    function moveTaskToStatus(taskId, status) {
+      const task = getTaskById(taskId);
+
+      if (!task) {
+        return;
+      }
+
+      updateTaskStatus(task, status);
+    }
+
+    function sendTaskToTrash(taskId) {
+      const task = getTaskById(taskId);
+
+      if (!task) {
+        return;
+      }
+
+      task.previousStatus = task.status;
+      task.deleted = true;
+      saveTasks();
+      renderTasks();
+    }
+
+    function restoreTask(taskId) {
+      const task = getTaskById(taskId);
+
+      if (!task) {
+        return;
+      }
+
+      task.status = task.previousStatus || "todo";
+      task.previousStatus = null;
+      task.deleted = false;
+      saveTasks();
+      renderTasks();
+    }
+
+    function deleteTaskForever(taskId) {
+      tasks = tasks.filter((task) => task.id !== taskId);
+      saveTasks();
+      renderTasks();
+    }
+
+    function openEditModal(taskId) {
+      const task = getTaskById(taskId);
+
+      if (!task || task.deleted) {
+        return;
+      }
+
+      editingTaskId = taskId;
+      editTitleInput.value = task.title;
+      editPrioritySelect.value = task.priority;
+      editModal.classList.add("open");
+      editModal.setAttribute("aria-hidden", "false");
+      editTitleInput.focus();
+    }
+
+    function closeEditModal() {
+      editingTaskId = null;
+      editForm.reset();
+      editModal.classList.remove("open");
+      editModal.setAttribute("aria-hidden", "true");
+    }
+
+    function createTaskElement(task) {
       const item = document.createElement("li");
-      item.className = "task";
-      item.dataset.status = "todo";
+      item.className = `task priority-${task.priority}`;
+      item.dataset.id = task.id;
+      item.dataset.status = task.status;
       item.draggable = true;
+      item.classList.toggle("done", task.status === "done");
 
       const checkbox = document.createElement("input");
       checkbox.className = "task-checkbox";
       checkbox.type = "checkbox";
+      checkbox.checked = task.status === "done";
+
+      const taskContent = document.createElement("div");
+      taskContent.className = "task-content";
 
       const taskText = document.createElement("span");
       taskText.className = "task-text";
-      taskText.textContent = text;
+      taskText.textContent = task.title;
+
+      const priority = document.createElement("span");
+      priority.className = "task-priority";
+      priority.textContent = priorityLabels[task.priority];
+
+      const editButton = document.createElement("button");
+      editButton.className = "edit-button";
+      editButton.type = "button";
+      editButton.textContent = "Редактировать";
 
       const deleteButton = document.createElement("button");
       deleteButton.className = "delete-button";
@@ -233,19 +567,24 @@
 
       checkbox.addEventListener("change", () => {
         if (checkbox.checked) {
-          moveTaskToStatus(item, "done");
+          moveTaskToStatus(task.id, "done");
           return;
         }
 
-        moveTaskToStatus(item, "todo");
+        moveTaskToStatus(task.id, "todo");
+      });
+
+      editButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openEditModal(task.id);
       });
 
       deleteButton.addEventListener("click", () => {
-        item.remove();
+        sendTaskToTrash(task.id);
       });
 
       item.addEventListener("dragstart", () => {
-        draggedTask = item;
+        draggedTask = task.id;
         item.classList.add("dragging");
       });
 
@@ -254,8 +593,80 @@
         draggedTask = null;
       });
 
-      item.append(checkbox, taskText, deleteButton);
+      item.addEventListener("click", (event) => {
+        if (event.target.closest("button") || event.target.closest("input")) {
+          return;
+        }
+
+        openEditModal(task.id);
+      });
+
+      taskContent.append(taskText, priority);
+      item.append(checkbox, taskContent, editButton, deleteButton);
       return item;
+    }
+
+    function createTrashTaskElement(task) {
+      const item = document.createElement("li");
+      item.className = `task priority-${task.priority}`;
+
+      const taskContent = document.createElement("div");
+      taskContent.className = "task-content";
+
+      const taskText = document.createElement("span");
+      taskText.className = "task-text";
+      taskText.textContent = task.title;
+
+      const priority = document.createElement("span");
+      priority.className = "task-priority";
+      priority.textContent = priorityLabels[task.priority];
+
+      const restoreButton = document.createElement("button");
+      restoreButton.className = "restore-button";
+      restoreButton.type = "button";
+      restoreButton.textContent = "Восстановить";
+
+      const deleteButton = document.createElement("button");
+      deleteButton.className = "delete-button";
+      deleteButton.type = "button";
+      deleteButton.textContent = "Удалить навсегда";
+
+      restoreButton.addEventListener("click", () => {
+        restoreTask(task.id);
+      });
+
+      deleteButton.addEventListener("click", () => {
+        deleteTaskForever(task.id);
+      });
+
+      taskContent.append(taskText, priority);
+      item.append(taskContent, restoreButton, deleteButton);
+      return item;
+    }
+
+    function renderTasks() {
+      document.querySelectorAll(".column .tasks").forEach((list) => {
+        list.innerHTML = "";
+      });
+      trashTasks.innerHTML = "";
+
+      tasks.forEach((task) => {
+        if (task.deleted) {
+          trashTasks.append(createTrashTaskElement(task));
+          return;
+        }
+
+        const targetColumn = document.querySelector(`[data-status="${task.status}"]`);
+
+        if (!targetColumn) {
+          return;
+        }
+
+        targetColumn.querySelector(".tasks").append(createTaskElement(task));
+      });
+
+      trashEmpty.hidden = tasks.some((task) => task.deleted);
+      clearTrashButton.disabled = !tasks.some((task) => task.deleted);
     }
 
     columns.forEach((column) => {
@@ -287,10 +698,47 @@
         return;
       }
 
-      todoTasks.append(createTask(text));
+      tasks.push(createTaskData(text, taskPriority.value));
+      saveTasks();
+      renderTasks();
       taskInput.value = "";
+      taskPriority.value = "medium";
       taskInput.focus();
     });
+
+    editForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const task = getTaskById(editingTaskId);
+      const title = editTitleInput.value.trim();
+
+      if (!task || !title) {
+        return;
+      }
+
+      task.title = title;
+      task.priority = editPrioritySelect.value;
+      saveTasks();
+      renderTasks();
+      closeEditModal();
+    });
+
+    cancelEditButton.addEventListener("click", closeEditModal);
+    closeModalButton.addEventListener("click", closeEditModal);
+
+    editModal.addEventListener("click", (event) => {
+      if (event.target === editModal) {
+        closeEditModal();
+      }
+    });
+
+    clearTrashButton.addEventListener("click", () => {
+      tasks = tasks.filter((task) => !task.deleted);
+      saveTasks();
+      renderTasks();
+    });
+
+    renderTasks();
   </script>
 </body>
 </html>
