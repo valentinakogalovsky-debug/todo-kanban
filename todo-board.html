@@ -22,7 +22,7 @@
 
     .app {
       width: 100%;
-      max-width: 560px;
+      max-width: 980px;
     }
 
     h1 {
@@ -71,7 +71,33 @@
       background: #1d4ed8;
     }
 
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .column {
+      min-height: 260px;
+      padding: 12px;
+      border: 1px solid #d8e0ea;
+      border-radius: 6px;
+      background: #eaf0f7;
+    }
+
+    .column.drag-over {
+      border-color: #2563eb;
+      background: #dbeafe;
+    }
+
+    .column-title {
+      margin: 0 0 12px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
     .tasks {
+      min-height: 200px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -88,6 +114,12 @@
       border: 1px solid #d8e0ea;
       border-radius: 6px;
       background: #ffffff;
+      cursor: grab;
+    }
+
+    .task.dragging {
+      opacity: 0.6;
+      cursor: grabbing;
     }
 
     .task-checkbox {
@@ -125,6 +157,10 @@
       .add-button {
         min-height: 44px;
       }
+
+      .board {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -137,17 +173,50 @@
       <button class="add-button" type="submit">Добавить</button>
     </form>
 
-    <ul class="tasks" id="taskList"></ul>
+    <section class="board" aria-label="Канбан-доска">
+      <div class="column" data-status="todo">
+        <h2 class="column-title">К выполнению</h2>
+        <ul class="tasks" id="todoTasks"></ul>
+      </div>
+
+      <div class="column" data-status="in-progress">
+        <h2 class="column-title">В работе</h2>
+        <ul class="tasks" id="inProgressTasks"></ul>
+      </div>
+
+      <div class="column" data-status="done">
+        <h2 class="column-title">Готово</h2>
+        <ul class="tasks" id="doneTasks"></ul>
+      </div>
+    </section>
   </main>
 
   <script>
     const taskForm = document.querySelector("#taskForm");
     const taskInput = document.querySelector("#taskInput");
-    const taskList = document.querySelector("#taskList");
+    const todoTasks = document.querySelector("#todoTasks");
+    const columns = document.querySelectorAll(".column");
+    let draggedTask = null;
+
+    function updateTaskStatus(item, status) {
+      item.dataset.status = status;
+      item.classList.toggle("done", status === "done");
+      item.querySelector(".task-checkbox").checked = status === "done";
+    }
+
+    function moveTaskToStatus(item, status) {
+      const targetColumn = document.querySelector(`[data-status="${status}"]`);
+      const targetList = targetColumn.querySelector(".tasks");
+
+      targetList.append(item);
+      updateTaskStatus(item, status);
+    }
 
     function createTask(text) {
       const item = document.createElement("li");
       item.className = "task";
+      item.dataset.status = "todo";
+      item.draggable = true;
 
       const checkbox = document.createElement("input");
       checkbox.className = "task-checkbox";
@@ -163,16 +232,52 @@
       deleteButton.textContent = "Удалить";
 
       checkbox.addEventListener("change", () => {
-        item.classList.toggle("done", checkbox.checked);
+        if (checkbox.checked) {
+          moveTaskToStatus(item, "done");
+          return;
+        }
+
+        moveTaskToStatus(item, "todo");
       });
 
       deleteButton.addEventListener("click", () => {
         item.remove();
       });
 
+      item.addEventListener("dragstart", () => {
+        draggedTask = item;
+        item.classList.add("dragging");
+      });
+
+      item.addEventListener("dragend", () => {
+        item.classList.remove("dragging");
+        draggedTask = null;
+      });
+
       item.append(checkbox, taskText, deleteButton);
       return item;
     }
+
+    columns.forEach((column) => {
+      column.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        column.classList.add("drag-over");
+      });
+
+      column.addEventListener("dragleave", () => {
+        column.classList.remove("drag-over");
+      });
+
+      column.addEventListener("drop", () => {
+        column.classList.remove("drag-over");
+
+        if (!draggedTask) {
+          return;
+        }
+
+        moveTaskToStatus(draggedTask, column.dataset.status);
+      });
+    });
 
     taskForm.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -182,7 +287,7 @@
         return;
       }
 
-      taskList.append(createTask(text));
+      todoTasks.append(createTask(text));
       taskInput.value = "";
       taskInput.focus();
     });
