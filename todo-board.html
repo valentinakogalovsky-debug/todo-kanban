@@ -30,7 +30,8 @@
 
     h1 {
       margin: 0 0 24px;
-      font-size: 32px;
+      font-family: "Cotta", Georgia, "Times New Roman", serif;
+      font-size: 42px;
       font-weight: 700;
       text-align: center;
       color: #fff7df;
@@ -110,6 +111,37 @@
     .column-button:disabled {
       cursor: not-allowed;
       opacity: 0.6;
+    }
+
+    .project-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: -8px 0 22px;
+    }
+
+    .project-label {
+      color: #fff7df;
+      font-weight: 700;
+    }
+
+    .project-select {
+      flex: 0 1 260px;
+      max-width: 280px;
+      font-weight: 700;
+    }
+
+    .project-button {
+      padding: 11px 14px;
+      color: #fff7df;
+      background: #4f7b3f;
+      font-weight: 700;
+    }
+
+    .project-button:hover {
+      background: #3f6532;
     }
 
     .board {
@@ -713,7 +745,13 @@
 </head>
 <body>
   <main class="app">
-    <h1>To-Do Board</h1>
+    <h1>Task Tracker</h1>
+
+    <section class="project-bar" aria-label="Управление проектами">
+      <span class="project-label">Проект:</span>
+      <select class="project-select" id="projectSelect" aria-label="Выбор проекта"></select>
+      <button class="project-button" id="addProjectButton" type="button">Добавить проект</button>
+    </section>
 
     <section class="board" id="board" aria-label="Канбан-доска"></section>
 
@@ -811,14 +849,41 @@
     </div>
   </div>
 
+  <div class="modal" id="projectModal" aria-hidden="true">
+    <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="projectModalTitle">
+      <div class="modal-header">
+        <h2 class="modal-title" id="projectModalTitle">Добавить проект</h2>
+        <button class="close-button" id="closeProjectModalButton" type="button" aria-label="Закрыть">×</button>
+      </div>
+
+      <form id="projectForm">
+        <label class="modal-field">
+          Название проекта
+          <input id="projectTitleInput" type="text" autocomplete="off">
+        </label>
+
+        <div class="modal-actions">
+          <button class="cancel-button" id="cancelProjectButton" type="button">Отмена</button>
+          <button class="save-button" type="submit">Создать</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const storageKey = "todo-kanban-tasks";
     const columnsStorageKey = "todo-kanban-columns";
+    const projectsStorageKey = "todo-kanban-projects";
+    const defaultProjectTitle = "Основной проект";
     const defaultColumns = [
       { id: "todo", title: "К выполнению", isDefault: true, order: 0 },
       { id: "in-progress", title: "В работе", isDefault: true, order: 1 },
       { id: "done", title: "Готово", isDefault: true, order: 2 }
     ];
+    function createDefaultColumns() {
+      return defaultColumns.map((column) => ({ ...column }));
+    }
+
     const maxCustomColumns = 5;
     const priorityLabels = {
       low: "Низкий",
@@ -838,6 +903,13 @@
       { id: "wood-orange", label: "Древесно-оранжевый", value: "#B66A32" }
     ];
     const board = document.querySelector("#board");
+    const projectSelect = document.querySelector("#projectSelect");
+    const addProjectButton = document.querySelector("#addProjectButton");
+    const projectModal = document.querySelector("#projectModal");
+    const projectForm = document.querySelector("#projectForm");
+    const projectTitleInput = document.querySelector("#projectTitleInput");
+    const closeProjectModalButton = document.querySelector("#closeProjectModalButton");
+    const cancelProjectButton = document.querySelector("#cancelProjectButton");
     let addColumnButton = null;
     let columnMessage = null;
     const columnModal = document.querySelector("#columnModal");
@@ -865,8 +937,9 @@
     const editTagList = document.querySelector("#editTagList");
     const closeModalButton = document.querySelector("#closeModalButton");
     const cancelEditButton = document.querySelector("#cancelEditButton");
-    let boardColumns = normalizeColumns(loadColumns());
-    let tasks = normalizeTasks(loadTasks());
+    let projectState = normalizeProjectState(loadProjectState());
+    let boardColumns = getCurrentProject().columns;
+    let tasks = getCurrentProject().tasks;
     let draggedTask = null;
     let draggedColumn = null;
     let editingTaskId = null;
@@ -875,7 +948,7 @@
     let selectedEditTagColor = tagColors[0].id;
     let activeAddCardColumnId = null;
 
-    function loadTasks() {
+    function loadLegacyTasks() {
       const savedTasks = localStorage.getItem(storageKey);
 
       if (!savedTasks) {
@@ -890,7 +963,7 @@
       }
     }
 
-    function loadColumns() {
+    function loadLegacyColumns() {
       const savedColumns = localStorage.getItem(columnsStorageKey);
 
       if (!savedColumns) {
@@ -905,12 +978,124 @@
       }
     }
 
+    function loadProjectState() {
+      const savedProjects = localStorage.getItem(projectsStorageKey);
+
+      if (!savedProjects) {
+        return null;
+      }
+
+      try {
+        const parsedProjects = JSON.parse(savedProjects);
+        return parsedProjects && typeof parsedProjects === "object" ? parsedProjects : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveProjectState() {
+      const currentProject = getCurrentProject();
+
+      if (currentProject) {
+        currentProject.columns = boardColumns;
+        currentProject.tasks = tasks;
+      }
+
+      localStorage.setItem(projectsStorageKey, JSON.stringify(projectState));
+    }
+
     function saveTasks() {
-      localStorage.setItem(storageKey, JSON.stringify(tasks));
+      saveProjectState();
     }
 
     function saveColumns() {
-      localStorage.setItem(columnsStorageKey, JSON.stringify(boardColumns));
+      saveProjectState();
+    }
+
+    function createProject(title, columns = createDefaultColumns(), taskList = []) {
+      const normalizedColumns = normalizeColumns(columns);
+
+      return {
+        id: `project-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        title,
+        columns: normalizedColumns,
+        tasks: normalizeTasks(taskList, normalizedColumns)
+      };
+    }
+
+    function normalizeProject(project, index) {
+      const normalizedColumns = normalizeColumns(Array.isArray(project.columns) ? project.columns : createDefaultColumns());
+
+      return {
+        id: project.id || `project-${Date.now()}-${index}`,
+        title: project.title || `Проект ${index + 1}`,
+        columns: normalizedColumns,
+        tasks: normalizeTasks(Array.isArray(project.tasks) ? project.tasks : [], normalizedColumns)
+      };
+    }
+
+    function normalizeProjectState(savedState) {
+      if (savedState && Array.isArray(savedState.projects) && savedState.projects.length) {
+        const projects = savedState.projects.map(normalizeProject);
+        const currentProjectId = projects.some((project) => project.id === savedState.currentProjectId)
+          ? savedState.currentProjectId
+          : projects[0].id;
+
+        return { projects, currentProjectId };
+      }
+
+      const legacyProject = createProject(defaultProjectTitle, loadLegacyColumns(), loadLegacyTasks());
+      return {
+        projects: [legacyProject],
+        currentProjectId: legacyProject.id
+      };
+    }
+
+    function getCurrentProject() {
+      return projectState.projects.find((project) => project.id === projectState.currentProjectId) || projectState.projects[0];
+    }
+
+    function syncCurrentProjectFromState() {
+      const currentProject = getCurrentProject();
+      boardColumns = currentProject.columns;
+      tasks = currentProject.tasks;
+    }
+
+    function switchProject(projectId) {
+      if (!projectState.projects.some((project) => project.id === projectId)) {
+        return;
+      }
+
+      saveProjectState();
+      projectState.currentProjectId = projectId;
+      activeAddCardColumnId = null;
+      draggedTask = null;
+      draggedColumn = null;
+      syncCurrentProjectFromState();
+      saveProjectState();
+      renderTasks();
+    }
+
+    function addProject(title) {
+      const project = createProject(title);
+      saveProjectState();
+      projectState.projects.push(project);
+      projectState.currentProjectId = project.id;
+      syncCurrentProjectFromState();
+      saveProjectState();
+      renderTasks();
+    }
+
+    function renderProjectControls() {
+      projectSelect.innerHTML = "";
+
+      projectState.projects.forEach((project) => {
+        const option = document.createElement("option");
+        option.value = project.id;
+        option.textContent = project.title;
+        option.selected = project.id === projectState.currentProjectId;
+        projectSelect.append(option);
+      });
     }
 
     function normalizeColumns(columnList) {
@@ -941,8 +1126,8 @@
         .map((column, index) => ({ ...column, order: index }));
     }
 
-    function getColumnById(columnId) {
-      return boardColumns.find((column) => column.id === columnId);
+    function getColumnById(columnId, columnList = boardColumns) {
+      return columnList.find((column) => column.id === columnId);
     }
 
     function getColumnTitle(columnId) {
@@ -964,17 +1149,17 @@
       };
     }
 
-    function normalizeTasks(taskList) {
+    function normalizeTasks(taskList, columnList = boardColumns) {
       return taskList.map((task, index) => ({
         id: task.id || `${Date.now()}-${index}`,
         title: task.title || "",
         description: task.description || "",
         status: task.status || task.columnId || "todo",
-        columnId: getColumnById(task.columnId || task.status) ? (task.columnId || task.status) : "todo",
+        columnId: getColumnById(task.columnId || task.status, columnList) ? (task.columnId || task.status) : "todo",
         priority: task.priority || "medium",
         deleted: Boolean(task.deleted),
         previousStatus: task.previousStatus || null,
-        previousColumnId: getColumnById(task.previousColumnId || task.previousStatus) ? (task.previousColumnId || task.previousStatus) : null,
+        previousColumnId: getColumnById(task.previousColumnId || task.previousStatus, columnList) ? (task.previousColumnId || task.previousStatus) : null,
         deadline: task.deadline || "",
         tags: Array.isArray(task.tags) ? task.tags.map(normalizeTag).filter((tag) => tag.name) : [],
         order: Number.isFinite(task.order) ? task.order : index
@@ -1231,6 +1416,19 @@
     function closeTrashModal() {
       trashModal.classList.remove("open");
       trashModal.setAttribute("aria-hidden", "true");
+    }
+
+    function openProjectModal() {
+      projectForm.reset();
+      projectModal.classList.add("open");
+      projectModal.setAttribute("aria-hidden", "false");
+      projectTitleInput.focus();
+    }
+
+    function closeProjectModal() {
+      projectForm.reset();
+      projectModal.classList.remove("open");
+      projectModal.setAttribute("aria-hidden", "true");
     }
 
     function openColumnModal(columnId = null) {
@@ -1629,6 +1827,7 @@
     }
 
     function renderTasks() {
+      renderProjectControls();
       renderColumns();
       document.querySelectorAll(".column .tasks").forEach((list) => {
         list.innerHTML = "";
@@ -1828,6 +2027,34 @@
       syncColumnOrderFromDom();
     });
 
+    projectSelect.addEventListener("change", () => {
+      switchProject(projectSelect.value);
+    });
+
+    addProjectButton.addEventListener("click", openProjectModal);
+
+    projectForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const title = projectTitleInput.value.trim();
+
+      if (!title) {
+        return;
+      }
+
+      addProject(title);
+      closeProjectModal();
+    });
+
+    cancelProjectButton.addEventListener("click", closeProjectModal);
+    closeProjectModalButton.addEventListener("click", closeProjectModal);
+
+    projectModal.addEventListener("click", (event) => {
+      if (event.target === projectModal) {
+        closeProjectModal();
+      }
+    });
+
     editForm.addEventListener("submit", (event) => {
       event.preventDefault();
 
@@ -1912,6 +2139,7 @@
       addTag(editTaskTags, editTagInput, selectedEditTagColor, renderEditTagControls);
     });
 
+    saveProjectState();
     renderEditTagControls();
     renderTasks();
   </script>
